@@ -14,4 +14,6 @@ abstract class Query{
   public function getType(): string{
     return substr(static::class, strrpos(static::class, '\\') + 1);
   }
+
+	public abstract function getValue(): array;
 }

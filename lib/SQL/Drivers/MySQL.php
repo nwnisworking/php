@@ -5,13 +5,13 @@ use PDO;
 use SQL\Driver;
 
 final class MySQL extends Driver{
-  public function connect(?array $config = []): bool|self{
-    $prefix = @$config['DB_PREFIX'] ?? '';
-    $host = @$config['DB_HOST'] ?? 'localhost';
-    $port = @$config['DB_PORT'] ?? '';
-    $name = @$config['DB_NAME'] ?? '';
-    $user = @$config['DB_USER'] ?? 'root';
-    $pass = @$config['DB_PASS'] ?? '';
+  public function connect(): bool|self{
+    $prefix = @self::$config['DB_PREFIX'] ?? '';
+    $host = @self::$config['DB_HOST'] ?? 'localhost';
+    $port = @self::$config['DB_PORT'] ?? '';
+    $name = @self::$config['DB_NAME'] ?? '';
+    $user = @self::$config['DB_USER'] ?? 'root';
+    $pass = @self::$config['DB_PASS'] ?? '';
     
     try{
       $this->driver = new PDO(

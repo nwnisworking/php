@@ -33,10 +33,6 @@ final class Select extends Query{
 
   private string $with;
 
-  public function __construct(string $table, $columns = ['*']){
-    parent::__construct($table, $columns);
-  }
-
   public function setDistinct(bool $value): self{
     $this->is_distinct = $value;
     return $this;
