@@ -5,6 +5,7 @@
 
 final class Session{
 	public static function init(array $config = []): void{
+		ini_set('session.use_strict_mode', true);
 		ini_set('session.name', @$config['SESS_NAME'] ?? 'PHPSESSID');
 		session_set_cookie_params([
 			'lifetime'=>@$config['SESS_LIFETIME'] ?? 0,
