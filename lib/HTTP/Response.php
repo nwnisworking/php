@@ -4,14 +4,13 @@ namespace HTTP;
 final class Response{
 	public array $header;
 
-	private int $status = 200;
-
 	public function __construct(){
 		$this->header = array_change_key_case(apache_response_headers());
 	}
 
 	public function set(string $key, string|int $value): self{
 		$this->header[$key] = $value;
+		header("$key: $value", true);
 		return $this;
 	}
 
@@ -20,7 +19,7 @@ final class Response{
 	}
 
 	public function status(int $status): self{
-		$this->status = $status;
+		http_response_code($status);
 		return $this;
 	}
 
@@ -37,14 +36,5 @@ final class Response{
 		if($httponly) $cookie.= 'HttpOnly; ';
 
 		return $this->set('set-cookie', rtrim($cookie, '; '));
-	}
-
-	public function send(): void{
-		if(headers_sent()) return;
-
-		http_response_code($this->status);
-
-		foreach($this->header as $k=>$v)
-			header("$k: $v", true);
 	}
 }

@@ -30,11 +30,27 @@ final class Request{
 	}
 
 	public function uri(): string{
-		return parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+		return str_replace($_ENV['PATH'], '', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 	}
 
 	public function clientIp(): Address{
 		return new Address($_SERVER['REMOTE_ADDR'], $_SERVER['REMOTE_PORT']);
+	}
+
+	public function inPost(string ...$post): bool{
+		foreach(array_diff($post, array_keys($_POST)) as $v){
+			return !in_array($v, $post);
+		}
+
+		return true;
+	}
+
+	public function inGet(string ...$get): bool{
+		foreach(array_diff($get, array_keys($_GET)) as $v){
+			return !in_array($v, $get);
+		}
+
+		return true;
 	}
 
 	public function input(): array|string{
