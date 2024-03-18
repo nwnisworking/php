@@ -4,6 +4,7 @@ use InvalidArgumentException;
 use SQL\Exceptions\JoinTypeException;
 use SQL\Query;
 use SQL\Util\Condition;
+use SQL\Util\Symbol;
 use SQL\Where;
 
 final class Select extends Query{
@@ -30,6 +31,8 @@ final class Select extends Query{
   private bool $is_distinct = false;
 
   private bool $is_all = false;
+
+  private bool $is_insert = false;
 
   private string $with;
 
@@ -58,6 +61,11 @@ final class Select extends Query{
 
   public function getAll(): bool{
     return $this->is_all;
+  }
+
+  public function setInsert(bool $value): self{
+    $this->is_insert = $value;
+    return $this;
   }
 
   public function join(string $type, string $table, ?Condition $condition): self{
@@ -124,6 +132,9 @@ final class Select extends Query{
   public function getValue(): array{
     $data = [];
 
+    if($this->is_insert)
+      array_push($data, array_filter($this->columns, fn($e)=>!Symbol::is_symbol($e)));
+
     foreach(array_merge($this->where, $this->having) as $v)
       array_push($data, ...$v->getValue());  
 
@@ -139,7 +150,10 @@ final class Select extends Query{
     if($this->is_all)
       $str.= 'ALL ';
 
-    $str.= join(', ', $this->columns).' ';
+    if(!$this->is_insert)
+      $str.= join(', ', $this->columns).' ';
+    else
+      $str.= join(', ', array_map(fn($e)=>Symbol::is_symbol($e) ? Symbol::key($e) : '?', $this->columns));
 
     if(!isset($this->table) || empty($this->table))
       return $str;
