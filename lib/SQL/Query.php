@@ -16,4 +16,6 @@ abstract class Query{
   }
 
 	public abstract function getValue(): array;
+
+	public abstract function __toString(): string;
 }

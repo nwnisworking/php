@@ -65,6 +65,10 @@ abstract class Driver{
 		return !($res = $this->execute()) ?: $res->fetchAll(PDO::FETCH_FUNC, $fn);
 	}
 
+	public function lastId(): string|bool{
+		return $this->driver->lastInsertId();
+	}
+
 	public abstract function connect(): bool|self;
 
 	public static function init(?array $config = []): void{
