@@ -29,7 +29,7 @@ final class Update extends Query{
     return $data;
   }
 
-  public function __toString(){
+  public function __toString(): string{
     $str = "UPDATE $this->table SET ".join(', ', array_map(fn($e)=>"$e = ?", $this->columns));
     
     if(count($this->where))

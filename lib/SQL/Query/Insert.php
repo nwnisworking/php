@@ -44,7 +44,7 @@ final class Insert extends Query{
     return array_filter($values, fn($e)=>!Symbol::is_symbol($e));
   }
 
-  public function __toString(){
+  public function __toString(): string{
     $str = "INSERT INTO $this->table";
 
     if(count($this->columns))

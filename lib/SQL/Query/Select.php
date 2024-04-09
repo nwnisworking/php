@@ -141,7 +141,7 @@ final class Select extends Query{
     return $data;
   }
 
-  public function __toString(){
+  public function __toString(): string{
     $str = "SELECT ";
 
     if($this->is_distinct)

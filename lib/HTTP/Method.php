@@ -1,18 +1,18 @@
 <?php
 namespace HTTP;
 
-enum Method: string{
-	case GET = 'GET';
+enum Method{
+	case GET;
 
-	case POST = 'POST';
+	case POST;
 
-	case PUT = 'PUT';
+	case PUT;
 	
-	case DELETE = 'DELETE';
+	case DELETE;
 	
-	case PATCH = 'PATCH';
+	case PATCH;
 	
-	case HEAD = 'HEAD';
+	case HEAD;
 
-	case OPTIONS = 'OPTIONS';
+	case OPTIONS;
 }

@@ -17,7 +17,7 @@ final class Delete extends Query{
     return $data;
   }
 
-  public function __toString(){
+  public function __toString(): string{
     $str = "DELETE FROM $this->table";
     
     if(count($this->where))
