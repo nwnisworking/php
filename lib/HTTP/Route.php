@@ -2,6 +2,7 @@
 namespace HTTP;
 
 use Attribute;
+use Generator;
 use ReflectionClass;
 use ReflectionMethod;
 
@@ -11,9 +12,7 @@ final class Route{
 
 	public readonly Method $method;
 
-	private array $paths = [];
-
-	private ?array $middlewares;
+	protected ?array $middlewares;
 
 	public function __construct(string $path, Method $method = Method::GET, ?array ...$middlewares){
 		$this->path = $path;
@@ -21,41 +20,35 @@ final class Route{
 		$this->middlewares = $middlewares;
 	}
 
-	public function add(Route $route, ReflectionMethod $rm): void{
-		$path = $this->path.$route->path;
+	public function getMiddleware(): ?Generator{
+		foreach($this->middlewares as $middleware)
+			yield $middleware;
 
-		foreach($this->middlewares as $v)
-			$route->addMiddleware($v, true);
-
-		$route->addMiddleware($rm);
-		$this->paths[$path][] = $route;
-	}
-
-	public function addMiddleware(ReflectionMethod|callable|array $fn, bool $prepend = false): void{
-		if($fn instanceof ReflectionMethod)
-			$data = [$fn->class, $fn->name];
-		else
-			$data = $fn;
-
-		if($prepend)
-			array_unshift($this->middlewares, $data);
-		else
-			array_push($this->middlewares, $data);
+		return null;
 	}
 
 	public static function collect(string $class): array{
-		$rc = new ReflectionClass($class);
-		$path = @$rc->getAttributes(self::class);
+		$cls = new ReflectionClass($class);
+		$methods = [];
+		$main_route = @$cls->getAttributes(self::class);
 
-		if(!count($path))
+		if(!count($main_route))
 			return [];
 
-		$path = $path[0]->newInstance();
+		// For main route, only the first attribute is selected
+		$main_route = $main_route[0]->newInstance();
 
-		foreach($rc->getMethods(ReflectionMethod::IS_PUBLIC) as $rm)
-			foreach($rm->getAttributes(self::class) as $r)
-				$path->add($r->newInstance(), $rm);
+		foreach($cls->getMethods(ReflectionMethod::IS_PUBLIC) as $m){
+			foreach($m->getAttributes(self::class) as $r){
+				$route = $r->newInstance();
+				$path = $main_route->path.$route->path;
+				$methods[$route->method->value][$path] = $route;
+				$route->middlewares[] = [$m->class, $m->name];
+				
+				array_splice($route->middlewares, 0, 0, $main_route->middlewares);
+			}
+		}
 
-		return $path->paths;
+		return $methods;
 	}
 }
