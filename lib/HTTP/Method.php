@@ -1,4 +1,6 @@
 <?php
+namespace HTTP;
+
 enum Method: string{
 	case GET = 'GET';
 

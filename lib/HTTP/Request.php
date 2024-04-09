@@ -2,7 +2,6 @@
 namespace HTTP;
 
 use Address;
-use Method;
 
 final class Request{
 	public readonly array $header;

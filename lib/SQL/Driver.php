@@ -70,8 +70,4 @@ abstract class Driver{
 	}
 
 	public abstract function connect(): bool|self;
-
-	public static function init(?array $config = []): void{
-		self::$config = $config;
-	}
 }

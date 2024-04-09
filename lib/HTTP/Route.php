@@ -1,6 +1,7 @@
 <?php
+namespace HTTP;
+
 use Attribute;
-use Method;
 use ReflectionClass;
 use ReflectionMethod;
 
