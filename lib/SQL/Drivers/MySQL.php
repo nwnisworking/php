@@ -18,7 +18,7 @@ final class MySQL extends Driver{
       $query['dbname'] = $_ENV['DB_NAME'];
 
     try{
-      $this->driver = new PDO(
+      $this->pdo = new PDO(
         $this->getName().':'.http_build_query($query, '', ';'),
         $prefix.$user,
         $pass

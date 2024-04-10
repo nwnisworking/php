@@ -42,7 +42,7 @@ final class Route{
 			foreach($m->getAttributes(self::class) as $r){
 				$route = $r->newInstance();
 				$path = $main_route->path.$route->path;
-				$methods[$route->method->value][$path] = $route;
+				$methods[$route->method->name][$path] = $route;
 				$route->middlewares[] = [$m->class, $m->name];
 				
 				array_splice($route->middlewares, 0, 0, $main_route->middlewares);

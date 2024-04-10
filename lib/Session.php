@@ -38,4 +38,12 @@ final class Session{
 	public static function isActive(): bool{
 		return session_status() === PHP_SESSION_ACTIVE;
 	}
+
+	public static function get(string $key): mixed{
+		return unserialize(@$_SESSION[$key]);
+	}
+
+	public static function set(string $key, mixed $value): void{
+		$_SESSION[$key] = serialize($value);
+	}
 }

@@ -10,12 +10,10 @@ use SQL\Query\Select;
 use SQL\Query\Update;
 
 abstract class Driver{
-	protected PDO $driver;
+	protected PDO $pdo;
 
 	protected Query $query;
 
-	protected static array $config;
-	
 	public function getName(): string{
 		return strtolower(substr(static::class, strrpos(static::class, '\\') + 1));
 	}
@@ -37,7 +35,7 @@ abstract class Driver{
 	}
 
 	private function execute(): bool|PDOStatement{
-		$prepare = $this->driver->prepare($this->query);
+		$prepare = $this->pdo->prepare($this->query);
 
 		if(!$prepare->execute($this->query->getValue()))
 			return false;
@@ -66,12 +64,11 @@ abstract class Driver{
 	}
 
 	public function lastId(): string|bool{
-		return $this->driver->lastInsertId();
+		return $this->pdo->lastInsertId();
 	}
 
 	public abstract function connect(): bool|self;
 
-	/** Will throw errror? */
 	public static function create(): static{
 		return new (@$_ENV['DB_TYPE'] ?? 'MySQL');
 	}
