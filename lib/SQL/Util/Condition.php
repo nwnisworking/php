@@ -69,7 +69,7 @@ class Condition{
       $values[] = $this->value;
     else
       foreach($this->value as $value)
-        if(Symbol::is_symbol($value))
+        if(Symbol::is_symbol($value) || is_null($value))
           continue;
         elseif(is_a($value, self::class))
           array_push($values, ...$value->getValue());
@@ -124,11 +124,11 @@ class Condition{
     return new self($column, 'BETWEEN', [$min, $max], $glue);
   }
 
-  public static function isNull(string $column, string $glue = 'AND'): self{
+  public static function isNull(string|self $column, string $glue = 'AND'): self{
     return new self($column, 'IS NULL', null, $glue);
   }
 
-  public static function isNotNull(string $column, string $glue = 'AND'): self{
+  public static function isNotNull(string|self $column, string $glue = 'AND'): self{
     return new self($column, 'IS NOT NULL', null, $glue);
   }
 
@@ -142,6 +142,10 @@ class Condition{
 
   public static function exists(Select $select, string $glue = 'AND'): self{
     return (new self('', 'EXISTS', $select,));
+  }
+
+  public static function func(string $name, mixed ...$arg): self{
+    return (new self(sprintf('%s(%s)', $name, join(', ', array_map(fn($e)=>Symbol::is_symbol($e) ? Symbol::key($e) : (is_null($e) ? 'NULL' : '?'), $arg))), '', $arg));
   }
 
   private function map(Symbol|string|int|null|Select $e){

@@ -57,11 +57,11 @@ trait Where{
     return $this->where(Condition::between($column, $min, $max, $glue));
   }
 
-  public function isNull(string $column, string $glue = 'AND'): self{
+  public function isNull(string|Condition $column, string $glue = 'AND'): self{
     return $this->where(Condition::isNull($column, $glue));
   }
 
-  public function isNotNull(string $column, string $glue = 'AND'): self{
+  public function isNotNull(string|Condition $column, string $glue = 'AND'): self{
     return $this->where(Condition::isNotNull($column, $glue));
   }
 

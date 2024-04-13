@@ -70,6 +70,6 @@ abstract class Driver{
 	public abstract function connect(): bool|self;
 
 	public static function create(): static{
-		return new (@$_ENV['DB_TYPE'] ?? 'MySQL');
+		return new ('SQL\\Drivers\\'.(@$_ENV['DB_TYPE'] ?? 'MySQL'));
 	}
 }
