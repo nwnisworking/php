@@ -5,37 +5,47 @@ use HTTP\Request;
 use HTTP\Response;
 
 abstract class Controller{
-  private Request $request;
+	public function __construct(
+		private Request $request,
+		private Response $response
+	){}
 
-  private Response $response;
+	public function header(string $key, mixed $value = null): self{
+		$this->response->set($key, $value);
+		return $this;
+	}
 
-  protected View $view;
+	public function removeHeader(string $key): self{
+		$this->response->remove($key);
+		return $this;
+	}
 
-  public function __construct(Request $req, Response $res){
-    $this->request = $req;
-    $this->response = $res;
-    $this->view = new View;
-  }
+	public function json(object|array $json): string{
+		return json_encode($json);
+	}
 
-  public function json(object|array $json): string{
-    return $this->view->json($json);
-  }
+	public function render(string $path): string{
+		assert(file_exists($path), 'File cannot be rendered');
+
+		ob_start();
+		include_once $path;
+		return ob_get_clean();
+	}
 
   public function file(string $path, ?int $offset = null, ?int $length = null): string{
-    return $this->view->file($path, $offset, $length);
-  }
-
-  public function render(string $page, ?array $opt = []): string{
-    return $this->view->render($page, $opt);
-  }
-
-  public function layout(string $layout): self{
-    $this->view->layout($layout);
-    return $this;
+		assert(file_exists($path), 'File does not exists');
+		
+		return file_get_contents($path, offset: $offset ?? 0, length: $length ?? filesize($path));
   }
 
   public function status(int $status): self{
-    $this->response->status($status);
+		$this->response->status($status);
     return $this;
   }
+
+	public function model(string $model): Model{
+		assert(class_exists($model, true), "Model $model does not exists");
+
+		return new $model;
+	}
 }

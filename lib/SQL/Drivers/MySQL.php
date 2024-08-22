@@ -4,30 +4,33 @@ use Exception;
 use PDO;
 use SQL\Driver;
 
-final class MySQL extends Driver{
+class MySQL extends Driver{
+  protected static array $config = [];
+
+  protected static PDO $driver;
+
   public function connect(): bool|self{
-    $query = ['host'=>@$_ENV['DB_HOST'] ?? 'localhost'];
-    $prefix = @$_ENV['DB_PREFIX'] ?? '';
-    $user = @$_ENV['DB_USER'] ?? 'root';
-    $pass = @$_ENV['DB_PASS'] ?? '';
-
-    if(isset($_ENV['DB_PORT']))
-      $query['port'] = $_ENV['DB_PORT'];
-
-    if(isset($_ENV['DB_NAME']))
-      $query['dbname'] = $_ENV['DB_NAME'];
+    if(isset(self::$driver))
+      return $this;
 
     try{
-      $this->pdo = new PDO(
-        $this->getName().':'.http_build_query($query, '', ';'),
-        $prefix.$user,
-        $pass
+      self::$driver = new PDO(
+        $this->dsn([
+          'host'=>$this->config('host'),
+          'port'=>$this->config('port'),
+          'dbname'=>$this->config('dbname'),
+          'unix_socket'=>$this->config('unix_socket'),
+          'charset'=>$this->config('charset')
+        ]), 
+        $this->config('user'), 
+        $this->config('password')
       );
-
-      return $this;
     }
-    catch(Exception $e){}
+    catch(Exception $err){
+      assert(false, $err);
+      return false;
+    }
 
-    return false;
+    return $this;
   }
 }

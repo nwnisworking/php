@@ -1,9 +1,5 @@
 <?php
 require_once 'lib/Autoload.php';
-use SQL\Driver;
-use SQL\Util\Condition;
+require_once 'define.php';
 
-define('DS', DIRECTORY_SEPARATOR);
-
-Autoload::load(__DIR__.DS.'lib');
-Autoload::init();
+$app = new App(__DIR__.DS.'config');

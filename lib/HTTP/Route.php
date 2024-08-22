@@ -1,54 +1,83 @@
 <?php
 namespace HTTP;
 
-use Attribute;
-use Generator;
-use ReflectionClass;
-use ReflectionMethod;
-
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 final class Route{
+	private static array $controllers = [];
+
+	private static array $methods = [
+		'GET'=>[],
+		'POST'=>[],
+		'PUT'=>[],
+		'HEAD'=>[],
+		'DELETE'=>[]
+	];
+
+	public readonly string $method;
+
 	public readonly string $path;
 
-	public readonly Method $method;
+	private array $fn = [];
 
-	protected ?array $middlewares;
-
-	public function __construct(string $path, Method $method = Method::GET, ?array ...$middlewares){
-		$this->path = $path;
+	public function __construct(string $method, ?string $path, mixed $fn){
 		$this->method = $method;
-		$this->middlewares = $middlewares;
+		$this->path = $path;
+		$this->fn[] = $fn;
 	}
 
-	public function getMiddleware(): ?Generator{
-		foreach($this->middlewares as $middleware)
-			yield $middleware;
+	public function middleware(callable|array $fn): self{
+		if(is_array($fn))
+			self::setController($fn);
 
-		return null;
+		array_unshift($this->fn, $fn);
+		return $this;
 	}
 
-	public static function collect(string $class): array{
-		$cls = new ReflectionClass($class);
-		$methods = [];
-		$main_route = @$cls->getAttributes(self::class);
+	public function callback(): array{
+		return $this->fn;
+	}
 
-		if(!count($main_route))
-			return [];
+	public static function get(?string $path = null, mixed $fn = null): self|array{
+		return self::createRoute('GET', $path, $fn);
+	}
 
-		// For main route, only the first attribute is selected
-		$main_route = $main_route[0]->newInstance();
+	public static function post(?string $path = null, mixed $fn = null): self|array{
+		return self::createRoute('POST', $path, $fn);
+	}
 
-		foreach($cls->getMethods(ReflectionMethod::IS_PUBLIC) as $m){
-			foreach($m->getAttributes(self::class) as $r){
-				$route = $r->newInstance();
-				$path = $main_route->path.$route->path;
-				$methods[$route->method->name][$path] = $route;
-				$route->middlewares[] = [$m->class, $m->name];
-				
-				array_splice($route->middlewares, 0, 0, $main_route->middlewares);
-			}
-		}
+	public static function put(?string $path = null, mixed $fn = null): self|array{
+		return self::createRoute('PUT', $path, $fn);
+	}
 
-		return $methods;
+	public static function delete(?string $path = null, mixed $fn = null): self|array{
+		return self::createRoute('DELETE', $path, $fn);
+	}
+
+	public static function head(?string $path = null, mixed $fn = null): self|array{
+		return self::createRoute('HEAD', $path, $fn);
+	}
+
+	public static function init(): void{
+		foreach(self::$controllers as &$controller)
+			if(is_string($controller))
+				$controller = new $controller;
+	}
+
+	private static function createRoute(string $method, ?string $path, mixed $fn): self|array{
+		if(!isset($path, $fn))
+			return self::$methods[$method];
+
+		if(is_array($fn))
+			self::setController($fn);
+
+		return self::$methods[$method][$path] = new self($method, $path, $fn);
+	}
+
+	public static function setController(array &$controller): void{
+		$name = $controller[0];
+
+		assert(class_exists($name), "Controller '$name' class is not loaded");
+
+		self::$controllers[$name]??= $name;
+		$controller[0] = &self::$controllers[$name];
 	}
 }

@@ -3,30 +3,47 @@ use RecursiveDirectoryIterator as RDI;
 use RecursiveIteratorIterator as RII;
 
 final class Autoload{
-  private static array $path = [];
+	private static array $path = [];
 
-	public static function load(string $dir, ?callable $fn = null){
-    $rii = new RII(new RDI($dir, RDI::SKIP_DOTS), RII::LEAVES_ONLY);
+	public static function include(string $class): void{
+		assert(isset(self::$path[$class]), "Class did not follow file semantic and cannot be referenced as a result");
 
-		foreach($rii as $f){
-			$path = $f->getPathName();
-			$class = ltrim(str_replace([$dir, '.php'], '', $path), "\\/");
+		include_once self::$path[$class];
+	}
 
-			// This is to counter conversion of slash from local to production host
-			if(is_null($fn) || call_user_func($fn, $class, $path))
-				self::$path[str_replace('/', '\\', $class)] = $path; 
+	public static function load(string $dir, bool $last = false): void{
+		$rii = new RII(new RDI($dir, RDI::SKIP_DOTS), RII::LEAVES_ONLY);
+
+		/** 
+		 * This will trim the last directory so that the key will contain the last directory name first
+		 */
+		if($last)
+			$dir = substr($dir, 0, strrpos($dir, '\\'));
+
+		foreach($rii as $file){
+			$path = $file->getPathName();
+			$class = trim(str_replace('/', '\\', str_replace([$dir, '.php'], '', $path)), '\\/');
+
+			self::$path[$class] = $path;
 		}
 	}
 
-	public static function init(){
-		spl_autoload_register(fn($e)=>!isset(self::$path[$e]) ?: include_once(self::$path[$e]));
+	public static function getPaths(string $key): array{
+		return array_filter(
+			self::$path, 
+			fn($e)=>str_contains(strtolower($e), strtolower($key)), 
+			ARRAY_FILTER_USE_KEY
+		);
 	}
 
-	public static function filterKey(string $key): array{
-		return array_filter(self::$path, fn($e)=>str_contains($e, $key));
-	}
+	public static function get(string $key): ?string{
+		foreach(self::$path as $k=>$v)
+			if(str_contains(strtolower($k), strtolower($key)))
+				return $k;
 
-	public static function filterValue(string $path): array{
-		return array_filter(self::$path, fn($e)=>str_contains($e, $path));
+		return null;
 	}
 }
+
+Autoload::load(__DIR__);
+spl_autoload_register([Autoload::class, 'include']);

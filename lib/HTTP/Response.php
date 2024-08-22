@@ -14,6 +14,12 @@ final class Response{
 		return $this;
 	}
 
+	public function remove(string $key): self{
+		unset($this->header[$key]);
+		header_remove($key);
+		return $this;
+	}
+
 	public function get(string $key): string|int|null{
 		return @$this->header[$key];
 	}

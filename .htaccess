@@ -1,0 +1,9 @@
+RewriteEngine on 
+
+DirectoryIndex public/index.php
+
+RewriteCond %{REQUEST_URI} !(\..+)$ [OR]
+RewriteCond %{REQUEST_URI} \.php$ 
+RewriteRule (.+) public/index.php [QSA,L,S=1,END]
+
+RewriteRule (.+) public/$1 [L,END]
