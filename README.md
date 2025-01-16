@@ -1,2 +1,3 @@
 # php
-A PHP libraries created by me.
+A PHP libraries created to simplify writing PHP codes
+

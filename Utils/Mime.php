@@ -1,5 +1,10 @@
 <?php
 final class Mime{
+	/**
+	 * The list of file content type
+	 *
+	 * @var array
+	 */
 	private static array $types = [
 		'ez'=>'application/andrew-inset',
 		'aw'=>'application/applixware',
@@ -996,6 +1001,12 @@ final class Mime{
 		'ice'=>'x-conference/x-cooltalk',
 	];
 
+	/**
+	 * Get the name of the content-type based on file extension
+	 *
+	 * @param string $key Name of file extension
+	 * @return string The content type of the file extension
+	 */
 	public static function get(string $key): string{
 		return self::$types[$key];
 	}
