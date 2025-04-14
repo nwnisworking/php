@@ -1,5 +1,15 @@
 <?php
+/**
+ * Final Class Mime
+ * 
+ * Provide functionality to map a MIME type to its corresponding file extension.
+ */
 final class Mime{
+	/**
+	 * An associative array mapping file extensions to MIME types.
+	 * 
+	 * @var array<string, string>
+	 */
 	private static array $types = [
 		'ez'=>'application/andrew-inset',
 		'aw'=>'application/applixware',
@@ -996,7 +1006,14 @@ final class Mime{
 		'ice'=>'x-conference/x-cooltalk',
 	];
 
-	public static function get(string $key): string{
-		return self::$types[$key];
+	/**
+	 * Retrieves the file extension corresponding to a given MIME type.
+	 * 
+	 * @param string $format The MIME type for which to retrieve the extension.
+	 * 
+	 * @return string|null The corresponding file extension, or null if not found.
+	 */
+	public static function extension(string $format): ?string{
+		return @self::$types[$format];
 	}
 }

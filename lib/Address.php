@@ -1,35 +1,98 @@
 <?php
-final readonly class Address{
-	public readonly string $ip;
+/**
+ * Represents an IP address with an optional port.
+ *
+ * @readonly
+ */
+final readonly class Address {
+	/** 
+	 * The IP address.
+	 * 
+	 * @var string
+	 */
+	public string $ip;
 
-	public readonly ?int $port;
+	/** 
+	 * The port number, or null if unspecified.
+	 * 
+	 * @var int|null
+	 */
+	public ?int $port;
 
-	public readonly int $type;
-
-	public function __construct(string $ip, ?int $port = null){
-		if(!self::isIP($ip))
-			throw new IPException;
+	/**
+	 * Constructs an Address instance.
+	 *
+	 * Parses IP and port from a single string if port is not explicitly provided.
+	 *
+	 * @param string $ip The IP address or IP:port combination.
+	 * @param int|null $port The port number, or null.
+	 */
+	public function __construct(string $ip, ?int $port = null) {
+		if (is_null($port) && is_int(preg_match('/^\[?(?<ip>[\w.]+|[\w:]+)\]?(?::(?<port>\d+))?$/', $ip, $matches))) {
+			$port = $matches['port'] ?? null;
+			$ip = $matches['ip'];
+		}
 
 		$this->ip = $ip;
 		$this->port = $port;
-		$this->type = self::isIPV4($ip) ? AF_INET : AF_INET6;
 	}
 
-	public static function isIPV4(string $ip): bool{
-    return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
-  }
-  
-  public static function isIPV6(string $ip): bool{
-    return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
-  }
+	/**
+	 * Converts the IP address to its binary representation.
+	 *
+	 * @return string|bool Binary IP address on success, false on failure.
+	 */
+	public function ip(): string|bool {
+		return inet_pton($this->ip);
+	}
 
-  public static function isIP(string $ip): bool{
-    return self::isIPV4($ip) || self::isIPV6($ip); 
-  }
+	/**
+	 * Packs the port number into a network-order binary string.
+	 *
+	 * @return string|bool Packed port on success, false if no port is set.
+	 */
+	public function port(): string|bool {
+		return $this->port ? pack('n', $this->port) : false;
+	}
 
-	public function __toString(){
-		return $this->ip.':'.$this->port;
+	/**
+	 * Determines if the IP address is a valid IPv4 address.
+	 *
+	 * @return bool True if IPv4, false otherwise.
+	 */
+	public function isIPV4(): bool {
+		return filter_var($this->ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
+	}
+
+	/**
+	 * Determines if the IP address is a valid IPv6 address.
+	 *
+	 * @return bool True if IPv6, false otherwise.
+	 */
+	public function isIPV6(): bool {
+		return filter_var($this->ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
+	}
+
+	/**
+	 * Determines if the IP address is valid (either IPv4 or IPv6).
+	 *
+	 * @return bool True if valid IP, false otherwise.
+	 */
+	public function validIP(): bool {
+		return $this->isIPV4() || $this->isIPV6();
+	}
+
+	/**
+	 * Returns the string representation of the address.
+	 *
+	 * IPv6 addresses are enclosed in square brackets.
+	 *
+	 * @return string The formatted address.
+	 */
+	public function __toString() {
+		$ip = $this->ip;
+		$port = $this->port;
+
+		return ($this->isIPV6() ? "[$ip]" : $ip) . (is_null($port) ? '' : ":$port");
 	}
 }
-
-class IPException extends Exception{}

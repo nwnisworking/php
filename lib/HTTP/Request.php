@@ -2,9 +2,9 @@
 namespace HTTP;
 
 final class Request{
-	public readonly array $header;
+	public array $header;
 
-	public function __construct(){
+	public function __construct(?string $header = null){
 		$this->header = array_change_key_case(apache_request_headers());
 	}
 

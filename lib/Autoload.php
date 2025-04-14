@@ -1,49 +1,96 @@
 <?php
-use RecursiveDirectoryIterator as RDI;
-use RecursiveIteratorIterator as RII;
 
+use RecursiveDirectoryIterator as RDirectoryIterator;
+use RecursiveIteratorIterator as RIteratorIterator;
+
+/**
+ * Final Class Autoload
+ *
+ * Manages class autoloading by mapping class names to their respective file paths.
+ */
 final class Autoload{
-	private static array $path = [];
+	/**
+	 * List of available classes path.
+	 * 
+	 * @var array<string, string>
+	 */
+	private static array $classes = [];
 
-	public static function include(string $class): void{
-		assert(isset(self::$path[$class]), "Class did not follow file semantic and cannot be referenced as a result");
+	/**
+	 * Identifies whether autoloader is registered
+	 * 
+	 * @var bool
+	 */
+	private static bool $has_autoload_register = false;
 
-		include_once self::$path[$class];
-	}
+	/**
+	 * Loads all PHP files within the specified directory into the autoload map.
+	 *
+	 * @param string $dir The directory to scan for PHP files.
+	 * @param bool $first_segment Whether to preserve the first segment of the namespace.
+	 *
+	 * @return void
+	 */
+	public static function load(string $dir, bool $first_segment = false): void{
+		$files = new RIteratorIterator(new RDirectoryIterator($dir, RDirectoryIterator::SKIP_DOTS));
 
-	public static function load(string $dir, bool $last = false): void{
-		$rii = new RII(new RDI($dir, RDI::SKIP_DOTS), RII::LEAVES_ONLY);
-
-		/** 
-		 * This will trim the last directory so that the key will contain the last directory name first
-		 */
-		if($last)
-			$dir = substr($dir, 0, strrpos($dir, '\\'));
-
-		foreach($rii as $file){
+		foreach($files as $file){
 			$path = $file->getPathName();
-			$class = trim(str_replace('/', '\\', str_replace([$dir, '.php'], '', $path)), '\\/');
+			$class = str_replace(['/', '.php', !$first_segment ? "$dir\\" : ""], ['\\', ''], $path);
 
-			self::$path[$class] = $path;
+			self::$classes[$class] = $path;
 		}
 	}
 
-	public static function getPaths(string $key): array{
-		return array_filter(
-			self::$path, 
-			fn($e)=>str_contains(strtolower($e), strtolower($key)), 
-			ARRAY_FILTER_USE_KEY
-		);
+	/**
+	 * Retrieves the file path associated with a given class name.
+	 *
+	 * @param string $class The fully qualified class name.
+	 *
+	 * @return string|null The file path if found, or null otherwise.
+	 */
+	public static function getPath(string $class): ?string{
+		return @self::$classes[$class];
 	}
 
-	public static function get(string $key): ?string{
-		foreach(self::$path as $k=>$v)
-			if(str_contains(strtolower($k), strtolower($key)))
-				return $k;
+	/**
+	 * Checks if a class exists in the autoload map.
+	 *
+	 * @param string $class The fully qualified class name.
+	 *
+	 * @return bool True if the class exists, false otherwise.
+	 */
+	public static function exists(string $class): bool{
+		return array_key_exists($class, self::$classes);
+	}
 
-		return null;
+	/**
+	 * Initializes the autoloader and registers it with SPL.
+	 *
+	 * @param bool $trigger Trigger to register or unregister the autoloader
+	 */
+	public static function start(bool $trigger = true): void{
+		if($trigger && self::$has_autoload_register || !$trigger && !self::$has_autoload_register) return;
+
+		if($trigger)
+			spl_autoload_register([self::class, 'loader']);
+		else
+			spl_autoload_unregister([self::class,'loader']);
+
+		self::$has_autoload_register = $trigger;
+	}
+
+	/**
+	 * A callback function designated for loading classes 
+	 * 
+	 * @throws RuntimeException If the requested class cannot be found in the map.
+	 * 
+	 * @return void
+	 */
+	private static function loader(string $class): void{
+		if(!self::exists($class))
+			throw new RuntimeException("Unable to load class $class");
+
+		include_once self::getPath($class);
 	}
 }
-
-Autoload::load(__DIR__);
-spl_autoload_register([Autoload::class, 'include']);
